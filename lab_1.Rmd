@@ -1,0 +1,140 @@
+---
+title: "lab_1"
+author: "Juliet"
+date: "1/3/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# load packages, installing if missing
+if (!require(librarian)){
+  install.packages("librarian")
+  library(librarian)
+}
+librarian::shelf(
+  dismo, dplyr, DT, ggplot2, here, htmltools, leaflet, mapview, purrr, raster, readr, rgbif, rgdal, rJava, sdmpredictors, sf, spocc, tidyr)
+select <- dplyr::select # overwrite raster::select
+
+# set random seed for reproducibility
+set.seed(42)
+
+# directory to store data
+dir_data <- here("data/sdm")
+dir.create(dir_data, showWarnings = F)
+```
+
+```{r}
+# get species observations for the red lionfish: Pterois volitans
+# check for the species presence 
+
+obs_csv <- file.path(dir_data, "obs.csv")
+obs_geo <- file.path(dir_data, "obs.geojson")
+
+# get species occurrence data from GBIF with coordinates
+(res <- spocc::occ(
+  query = 'Pterois volitans', 
+  from = 'gbif', has_coords = T,
+  limit = 10000))
+```
+
+```{r}
+# extract data frame from result
+df <- res$gbif$data[[1]] 
+
+nrow(df) # number of rows
+```
+
+```{r}
+# convert to points of observation from lon/lat columns in data frame
+obs <- df %>% 
+  sf::st_as_sf(
+    coords = c("longitude", "latitude"),
+    crs = st_crs(4326))
+
+readr::write_csv(df, obs_csv)
+geojsonio::geojson_write(obs, obs_geo)
+
+# show points on map
+mapview::mapview(obs, map.types = "Esri.NatGeoWorldMap")
+```
+
+**Question 1. How many observations total are in GBIF for your species? (Hint: ?occ)**
+
+The total number of observations is 35,837. I got this number from the output of the occ() function, which returns `Occurrences - Found: 35,837`.
+
+
+Question 2. Do you see any odd observations, like marine species on land or vice versa? If so, please see the Data Cleaning and explain what you did to fix or remove these points.
+
+Yes, I found an observation of a red lionfish on land in Honduras. See the following code and comments for my detective steps.
+
+```{r}
+# FIRST ABNORMAL POINT:
+
+# find point in row 141 bc that one is on land
+land_fish_honduras <- obs[141,]
+land_fish_honduras
+
+# what variables can I review to determine what is wrong with this data?
+colnames(obs)
+
+# is this fish supposed to be in Honduras?
+land_fish_honduras$country
+# yes, fish was recorded as being in Honduras
+
+# check the coordinates for this point
+land_fish_honduras$geometry
+# interesting the the latitude only has 1 decimal place of accuracy 
+
+land_fish_honduras$coordinateUncertaintyInMeters
+# there is 422725 m of uncertainty for this coordinate
+# check the other geometries, are they more accurate than?
+obs$geometry
+# yes, the other geometries have much more decimal points than point 141, so this point is indeed supposed to be in honduras it is just less acurate
+
+# SECOND ABNORMAL POINT:
+
+land_fish_ind <- obs[9309,]
+land_fish_ind
+
+land_fish_ind$country
+# it is indeed supposed to be in Indonesia, so the issue lies elsewhere
+
+land_fish_ind$geometry
+# its decimal places are average considering others in this dataset
+
+land_fish_ind$coordinateUncertaintyInMeters
+# it is only 100m off, that seems normal
+
+land_fish_ind$locationID
+```
+
+```{r}
+library(spData)
+# check which points are over land
+land_points <- !is.na(as.numeric(st_intersects(obs$geometry, world)))
+
+## Check that it worked
+plot(st_geometry(world))
+plot(obs$geometry, col=1+land_points, pch=16, add=TRUE)
+```
+
+```{r}
+library(spData)
+# check which points are over land
+land_points <- !is.na(as.numeric(st_intersects(obs$geometry, world)))
+
+## Check that it worked
+#plot(st_geometry(world))
+#plot(obs$geometry, col=1+land_points, pch=16, add=TRUE)
+mapview::mapview(obs, map.types = "Esri.NatGeoWorldMap")
+```
+
+
+
+
+
+
