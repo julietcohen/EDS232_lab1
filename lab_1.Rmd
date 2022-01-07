@@ -48,18 +48,66 @@ df <- res$gbif$data[[1]]
 nrow(df) # number of rows
 ```
 
+
+
+### start of troubleshooting chunks, delete later:
+
+```{r}
+obs <- df %>% 
+  sf::st_as_sf(
+    coords = c("longitude", "latitude"),
+    crs = st_crs(4326))
+```
+
+
+```{r}
+# try to remove problematic columns (type list and character) so mapping works
+#lapply(obs, class)
+# remove the column of type list, networkKeys
+#colnames(obs)
+
+obs_clean <- obs_clean %>% 
+  select(name:publishingCountry, country, recordedBy, elevation, depth, coordinatePrecision, geometry)
+```
+
+```{r}
+readr::write_csv(df, obs_csv)
+```
+
+```{r}
+sf::write_sf(obs_clean, obs_geo)
+```
+
+```{r}
+# show points on map
+mapview::mapview(obs_clean, map.types = "Stamen.Terrain")
+```
+
+### end of delete section
+
+
+
+
+
 ```{r}
 # convert to points of observation from lon/lat columns in data frame
 obs <- df %>% 
   sf::st_as_sf(
     coords = c("longitude", "latitude"),
     crs = st_crs(4326))
+```
 
+```{r}
 readr::write_csv(df, obs_csv)
-geojsonio::geojson_write(obs, obs_geo)
+```
 
+```{r}
+geojsonio::geojson_write(obs, obs_geo)
+```
+
+```{r}
 # show points on map
-mapview::mapview(obs, map.types = "Esri.NatGeoWorldMap")
+mapview::mapview(obs$geometry, map.types = "Esri.NatGeoWorldMap")
 ```
 
 **Question 1. How many observations total are in GBIF for your species? (Hint: ?occ)**
@@ -67,9 +115,9 @@ mapview::mapview(obs, map.types = "Esri.NatGeoWorldMap")
 The total number of observations is 35,837. I got this number from the output of the occ() function, which returns `Occurrences - Found: 35,837`.
 
 
-Question 2. Do you see any odd observations, like marine species on land or vice versa? If so, please see the Data Cleaning and explain what you did to fix or remove these points.
+**Question 2. Do you see any odd observations, like marine species on land or vice versa? If so, please see the Data Cleaning and explain what you did to fix or remove these points.**
 
-Yes, I found an observation of a red lionfish on land in Honduras. See the following code and comments for my detective steps.
+Yes, I found some abnormal observations. First, I spotted observations of red lionfish on land in Honduras and Indonesia, quite far from the coastline. See the following code and comments for my investigative steps.
 
 ```{r}
 # FIRST ABNORMAL POINT:
@@ -92,7 +140,7 @@ land_fish_honduras$geometry
 land_fish_honduras$coordinateUncertaintyInMeters
 # there is 422725 m of uncertainty for this coordinate
 # check the other geometries, are they more accurate than?
-obs$geometry
+head(obs$geometry, 20)
 # yes, the other geometries have much more decimal points than point 141, so this point is indeed supposed to be in honduras it is just less acurate
 
 # SECOND ABNORMAL POINT:
@@ -104,13 +152,24 @@ land_fish_ind$country
 # it is indeed supposed to be in Indonesia, so the issue lies elsewhere
 
 land_fish_ind$geometry
+
 # its decimal places are average considering others in this dataset
 
 land_fish_ind$coordinateUncertaintyInMeters
 # it is only 100m off, that seems normal
 
 land_fish_ind$locationID
+
+
+
+# THIRD ABNORMAL POINT
+
+pt <- obs[139,]
+pt$geometry
+pt$country
 ```
+
+Map all the points on a static map, color coded for those on land and those mapped on water:
 
 ```{r}
 library(spData)
@@ -133,8 +192,42 @@ land_points <- !is.na(as.numeric(st_intersects(obs$geometry, world)))
 mapview::mapview(obs, map.types = "Esri.NatGeoWorldMap")
 ```
 
+### Section 2.4: Get Environmental Data
 
+```{r}
+dir_env <- file.path(dir_data, "env")
 
+# set a default data directory
+options(sdmpredictors_datadir = dir_env)
+
+# choosing MARINE
+env_datasets <- sdmpredictors::list_datasets(terrestrial = FALSE, marine = TRUE)
+
+# show table of datasets
+env_datasets %>% 
+  select(dataset_code, description, citation) %>% 
+  DT::datatable()
+```
+
+```{r}
+# choose datasets for a vector
+env_datasets_vec <- c("Bio-ORACLE", "MARSPEC")
+
+# get layers
+env_layers <- sdmpredictors::list_layers(env_datasets_vec)
+DT::datatable(env_layers)
+```
+
+```{r}
+# choose layers after some inspection and perhaps consulting literature
+env_layers_vec <- c("BO_calcite", "BO_chlomax")
+
+# get layers
+env_stack <- load_layers(env_layers_vec)
+
+# interactive plot layers, hiding all but first (select others)
+mapview(env_stack, hide = T)
+```
 
 
 
