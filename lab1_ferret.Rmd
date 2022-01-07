@@ -49,7 +49,8 @@ if (!file.exists(obs_geo) | redo){
   # get species occurrence data from GBIF with coordinates
   (res <- spocc::occ(
     query = 'Mustela nigripes', 
-    from = 'gbif', has_coords = T))
+    from = 'gbif', has_coords = T,
+    limit = 10000))
   
   # extract data frame from result
   df <- res$gbif$data[[1]] 
@@ -149,7 +150,7 @@ env_stack_grd <- file.path(dir_data, "env_stack.grd")
 
 if (!file.exists(obs_hull_geo) | redo){
   # make convex hull around points of observation
-  obs_hull <- sf::st_convex_hull(st_union(obs))
+  obs_hull <- sf::st_convex_hull(st_union(obs_clean))
   
   # save obs hull
   write_sf(obs_hull, obs_hull_geo)
@@ -158,7 +159,7 @@ obs_hull <- read_sf(obs_hull_geo)
 
 # show points on map
 mapview(
-  list(obs, obs_hull))
+  list(obs_clean, obs_hull))
 ```
 
 ```{r}
@@ -186,7 +187,7 @@ pts_env_csv <- file.path(dir_data, "pts_env.csv")
 if (!file.exists(absence_geo) | redo){
   # get raster count of observations
   r_obs <- rasterize(
-    sf::as_Spatial(obs), env_stack[[1]], field=1, fun='count')
+    sf::as_Spatial(obs_clean), env_stack[[1]], field=1, fun='count')
   
   # show map
   # mapview(obs) + 
@@ -196,7 +197,7 @@ if (!file.exists(absence_geo) | redo){
   r_mask <- mask(env_stack[[1]] > -Inf, r_obs, inverse=T)
   
   # generate random points inside mask
-  absence <- dismo::randomPoints(r_mask, nrow(obs)) %>% 
+  absence <- dismo::randomPoints(r_mask, nrow(obs_clean)) %>% 
     as_tibble() %>% 
     st_as_sf(coords = c("x", "y"), crs = 4326)
   
@@ -205,7 +206,7 @@ if (!file.exists(absence_geo) | redo){
 absence <- read_sf(absence_geo)
 
 # show map of presence, ie obs, and absence
-mapview(obs, col.regions = "green") + 
+mapview(obs_clean, col.regions = "green") + 
   mapview(absence, col.regions = "gray")
 ```
 
@@ -214,7 +215,7 @@ if (!file.exists(pts_env_csv) | redo){
 
   # combine presence and absence into single set of labeled points 
   pts <- rbind(
-    obs %>% 
+    obs_clean %>% 
       mutate(
         present = 1) %>% 
       select(present, key),
