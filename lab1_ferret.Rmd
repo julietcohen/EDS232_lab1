@@ -9,6 +9,8 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+## Species Distribution Modeling 
+
 ### Section 2.1 Install Packages
 
 ```{r}
@@ -32,7 +34,7 @@ dir.create(dir_data, showWarnings = F)
 
 ### Section 2.2 Choose a Species
 
-For my species distribution model, I will analyze the black-footed ferret, *Mustela nigripes*, which is an endangered mammal species that typically inhabits grasslands in the Northern Great Plains of the U.S.
+For my species distribution model, I will analyze the black-footed ferret, *Mustela nigripes*, which is an endangered mammal species that typically inhabits grasslands in the Northern Great Plains of the U.S. Black-footed ferrets are one of the most endangered mammals in North America and are the only ferret species native to the continent. The main sources of their population decline include habitat loss and disease. Therefore, it is exceptionally important that we protect understand their preferred habitat and environmental characteristics and protect the regions that fit that criteria. (source: [World Wildlife](https://www.worldwildlife.org/species/black-footed-ferret))
 
 ### Section 2.3 Get Species Observations
 
