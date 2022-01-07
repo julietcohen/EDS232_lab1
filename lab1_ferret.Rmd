@@ -1,5 +1,5 @@
 ---
-title: "lab1_ferret"
+title: "Lab 1a. Species Distribution Modeling - Exploratory Data Analysis"
 author: "Juliet"
 date: "1/6/2022"
 output: html_document
