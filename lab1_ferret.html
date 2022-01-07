@@ -276,11 +276,17 @@ duplicates &lt;- duplicated(obs$geometry)
 # how many duplicates were there? This will sum only the TRUE values
 sum(duplicates)</code></pre>
 <pre><code>## [1] 46</code></pre>
-<pre class="r"><code># keep only observations that were not duplicates
-obs_no_dup &lt;- obs[!duplicates, ]
+<pre class="r"><code># add duplicates as a col to the obs dataframe to see which rows were duplicates
+obs_check_dup &lt;- obs %&gt;% 
+  mutate(dups = duplicates)
+
+# seems like the duplicates function gives TRUE for all rows that match other rows, not just the second copy of the row, so we need to keep 1 copy and remove only the second copy!
+obs_no_dup_check &lt;- obs_check_dup %&gt;% 
+  distinct(geometry, .keep_all = TRUE)
 
 # remove observations that have fewer than 3 decimal places for either the latitude or longitude
-obs_clean &lt;- obs_no_dup[-c(108, 124, 133, 137, 144, 146, 148), ]</code></pre>
+obs_clean &lt;- obs_no_dup_check[-c(108, 124, 133, 137, 144, 146, 148), ] %&gt;% 
+  select(prov, key, geometry)</code></pre>
 </div>
 <div id="section-2.4-get-environmental-data" class="section level3">
 <h3>Section 2.4 Get Environmental Data</h3>

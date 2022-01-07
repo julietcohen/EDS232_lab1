@@ -90,11 +90,17 @@ duplicates <- duplicated(obs$geometry)
 # how many duplicates were there? This will sum only the TRUE values
 sum(duplicates)
 
-# keep only observations that were not duplicates
-obs_no_dup <- obs[!duplicates, ]
+# add duplicates as a col to the obs dataframe to see which rows were duplicates
+obs_check_dup <- obs %>% 
+  mutate(dups = duplicates)
+
+# seems like the duplicates function gives TRUE for all rows that match other rows, not just the second copy of the row, so we need to keep 1 copy and remove only the second copy!
+obs_no_dup_check <- obs_check_dup %>% 
+  distinct(geometry, .keep_all = TRUE)
 
 # remove observations that have fewer than 3 decimal places for either the latitude or longitude
-obs_clean <- obs_no_dup[-c(108, 124, 133, 137, 144, 146, 148), ]
+obs_clean <- obs_no_dup_check[-c(108, 124, 133, 137, 144, 146, 148), ] %>% 
+  select(prov, key, geometry)
 ```
 
 
