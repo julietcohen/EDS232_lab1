@@ -1,0 +1,25 @@
+[general]
+creator=R package 'raster'
+created=2022-01-06 19:49:29
+[georeference]
+nrows=293
+ncols=424
+xmin=-114.5
+ymin=26.4166666666667
+xmax=-79.1666666666667
+ymax=50.8333333333333
+projection=+proj=longlat +datum=WGS84 +no_defs
+[data]
+datatype=FLT4S
+byteorder=little
+nbands=5
+bandorder=BIL
+minvalue=0:-4.5:44.5800018310547:92:-10
+maxvalue=3813:23.6000003814697:129.960006713867:1609:255
+nodatavalue=-3.4e+38
+[legend]
+legendtype=
+values=
+color=
+[description]
+layername=WC_alt:WC_bio1:WC_bio4:WC_bio12:ER_minTempWarmest
