@@ -84,10 +84,10 @@ mapview::mapview(obs, map.types = "Esri.NatGeoWorldMap")
 I do not see any odd observations such as a terrestrial black-footed ferret point documented in aquatic habitat. However, taking a look at the `geometry` column in for the `obs` dataframe, I noticed that there are duplicate points as well as points with very few decimal points for the latitude and/or longitude, meaning that these points are not accurate enough to reliably provide insight into the type of habitat that the black-footed ferret prefers. Therefore, I will filter the geometry column for duplicates and points that have fewer than 3 decimal places of precision.
 
 ```{r}
-# find duplicate coordinates
+# find duplicate coordinates, this function creates a vector of T or F for each of the 202 points
 duplicates <- duplicated(obs$geometry)
 
-# how many duplicates were there?
+# how many duplicates were there? This will sum only the TRUE values
 sum(duplicates)
 
 # keep only observations that were not duplicates

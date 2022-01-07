@@ -13,4 +13,24 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ### Explore (continued)
 
+```{r}
+librarian::shelf(
+  DT, dplyr, dismo, GGally, here, readr, tidyr)
+select <- dplyr::select # overwrite raster::select
+options(readr.show_col_types = F)
+
+dir_data    <- here("ferret_data/sdm")
+pts_env_csv <- file.path(dir_data, "pts_env.csv")
+
+# pts_env_csv is a dataframe of all the pseudo absence points that we created in the last lab 1a
+
+pts_env <- read_csv(pts_env_csv)
+nrow(pts_env)
+```
+
+why is the output 404? is it doubling the original 202 observations from the original dataset before i removed duplicates? lets check
+
+```{r}
+
+```
 
