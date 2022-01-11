@@ -29,7 +29,7 @@ set.seed(42)
 
 # directory to store data
 dir_data <- here("ferret_data/sdm")
-dir.create(dir_data, showWarnings = F)
+dir.create(dir_data, showWarnings = F, recursive = TRUE)
 ```
 
 ### Section 2.2 Choose a Species
