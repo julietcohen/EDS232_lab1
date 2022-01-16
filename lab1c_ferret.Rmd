@@ -84,7 +84,10 @@ mdl
 
 ```{r}
 # plot tree 
-par(mar = c(1, 1, 1, 1))
+# par() is a grpahics fucntion, used to query graphical parameters
+# mar arg is a numericla vector that takes a vector of 4 elements (bottom, left, top, right) thjat gives the lines of margin on all sides of the plot
+# Changing the 1's to other numbers and fractions doesnt change the output tho, maybe it only changes when knitted?
+par(mar = c(1, 1, 1, 1)) 
 rpart.plot(mdl)
 ```
 ## 2.2 Partition, depth = default
@@ -99,34 +102,45 @@ mdl
 rpart.plot(mdl)
 
 # plot complexity parameter
+# this is meant to be paired with an rpart() fit. This function gives a visual representation of the cross validation results in an rpart object
 plotcp(mdl)
 
 # rpart cross validation results
 mdl$cptable
+# Cross-Validation is a technique used to assess how well our Machine learning models perform on unseen data. It's the process of assessing how the results of a statistical analysis will generalize to an independent data set
 ```
 
 ## 2.3 Feature Interpretation
 
 ```{r}
 # caret cross validation results
+# train() sets up a grid of tuning parameters for a number of classification and regression routines, fits each model and calculates a resampling based performance measure.
 mdl_caret <- train(
   present ~ .,
   data       = d_train,
   method     = "rpart",
   trControl  = trainControl(method = "cv", number = 10),
   tuneLength = 20)
+# tuneLength = number of points on graph
 
 ggplot(mdl_caret)
 ```
 
 ```{r}
+# vip = variable importance scores for the predictors in a model
+# altitude has greatest impact
+# bio12 = annual mean precipitation has secnd most impact
+# being an endangered species with so little range partially due to the small population size, the lon and lat have a large impact
+# ER_minTempWarmest = Minimum temperature coldest month, has some impact but not much, seems the ferrets can deal with some cold temps
+# ferrets dont hibernate, but in winter, the amount of time they are active and the distances they travel decrease substantially (source: https://nationalzoo.si.edu/animals/black-footed-ferret#:~:text=In%20burrows%2C%20they%20sleep%2C%20catch,distances%20they%20travel%20decrease%20substantially.)
+# turns our that bio, annual mean temperature, has essentially no impact on ferret's habitat selection
 vip(mdl_caret, num_features = 40, bar = FALSE)
 ```
 
 ```{r}
 # Construct partial dependence plots
-# I changed the variable for pred.var argument from one ben had included to wc_alt
-p1 <- partial(mdl_caret, pred.var = "lat") %>% autoplot()
+# I changed the variable for pred.var argument from one ben had included to wc_alt (the most imp predictor) and the lat that ben had to bio12 since thats my second most important predictor
+p1 <- partial(mdl_caret, pred.var = "WC_bio12") %>% autoplot()
 p2 <- partial(mdl_caret, pred.var = "WC_alt") %>% autoplot()
 p3 <- partial(mdl_caret, pred.var = c("lat", "WC_alt")) %>% 
   plotPartial(levelplot = FALSE, zlab = "yhat", drape = TRUE, 
