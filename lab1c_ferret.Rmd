@@ -5,6 +5,20 @@ output: html_document
 
 ## Lab 1c. Species Distribution Modeling - Decision Trees
 
+### Learning Objectives
+
+There are two broad categories of Supervised Classification based on the type of response your modeling y∼x, where y is either a continuous value, in which case Regression, or it is a categorical value, in which case it’s a Classification.
+
+A binary response, such as presence or absence, is a categorical value, so typically a Classification technique would be used. However, by transforming the response with a logit function, we were able to use Regression techniques like generalized linear (glm()) and generalized additive (gam()) models.
+
+In this portion of the lab you’ll use Decision Trees as a Classification technique to the data with the response being categorical (factor(present)).
+
+- Recursive Partitioning (rpart())
+Originally called classification & regression trees (CART), but that’s copyrighted (Breiman, 1984).
+
+- Random Forest (RandomForest())
+Actually an ensemble model, ie trees of trees.
+
 ### 1 Setup
 
 ```{r}
@@ -50,7 +64,7 @@ skim(d)
 # skim is an alternative to summary()
 ```
 
-## 1.1 Split data into training and testing
+### 1.1 Split data into training and testing
 
 ```{r}
 # create training set with 80% of full data
@@ -90,7 +104,7 @@ mdl
 par(mar = c(1, 1, 1, 1)) 
 rpart.plot(mdl)
 ```
-## 2.2 Partition, depth = default
+### 2.2 Partition, depth = default
 
 ```{r}
 # decision tree with defaults
@@ -110,7 +124,7 @@ mdl$cptable
 # Cross-Validation is a technique used to assess how well our Machine learning models perform on unseen data. It's the process of assessing how the results of a statistical analysis will generalize to an independent data set
 ```
 
-## 2.3 Feature Interpretation
+### 2.3 Feature Interpretation
 
 ```{r}
 # caret cross validation results
@@ -151,7 +165,8 @@ gridExtra::grid.arrange(p1, p2, p3, ncol = 3)
 ```
 ## 3 Random Forests
 
-3.1 Fit
+### 3.1 Fit
+
 ```{r}
 # number of features
 n_features <- length(setdiff(names(d_train), "present"))
@@ -163,7 +178,7 @@ mdl_rf <- ranger(present ~ ., data = d_train)
 (default_rmse <- sqrt(mdl_rf$prediction.error))
 ```
 
-## 3.2 Feature Interpretation
+### 3.2 Feature Interpretation
 
 ```{r}
 # re-run model with impurity-based variable importance

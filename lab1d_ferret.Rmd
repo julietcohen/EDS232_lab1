@@ -11,6 +11,12 @@ knitr::opts_chunk$set(echo = TRUE)
 
 In the context of machine learning, calibration is comparing the actual output and the expected output from the model. The goal is to improve the model.
 
+### Learning Objectives
+
+Now you’ll complete the modeling workflow with the steps to evaluate model performance and calibrate model parameters.
+
+![](model_workflow_lab1d.png)
+
 ## 1 Setup
 
 ```{r}
@@ -117,7 +123,7 @@ data(wrld_simpl, package="maptools")
 plot(wrld_simpl, add=TRUE, border='dark grey')
 ```
 
-### 3 Evaluate: Model Performance
+## 3 Evaluate: Model Performance
 
 ### 3.1 Area Under the Curve (AUC), Reciever Operater Characteristic (ROC) Curve and Confusion Matrix
 

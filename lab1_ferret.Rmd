@@ -9,7 +9,25 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Species Distribution Modeling 
+## Lab 1a. Species Distribution Modeling - Exploratory Data Analysis
+
+### Learning Objectives
+
+#### Explore 
+
+- Fetch species observations from the Global Biodiversity Information Facility (GBIF.org) using an R package that wraps a function around their API.
+- Fetch environmental data for defining environmental relationship in the species distribution model (SDM).
+- Generate pseudo-absences, or background, points with which to differentiate from the species presence points in the SDM.
+- Extract underlying environmental data from points.
+- Plot term plots of each environmental predictor with the species response.
+
+### 1 Overview
+
+This lab will introduce you to machine learning by predicting presence of a species of you choosing from observations and environmental data. We will largely follow guidance found at Species distribution modeling | R Spatial using slightly newer R packages and functions.
+
+### 2 Explore
+
+This first part of the lab involves fetching data for your species of interest, whether terrestrial or marine.
 
 ### Section 2.1 Install Packages
 
@@ -81,7 +99,7 @@ mapview::mapview(obs, map.types = "Esri.NatGeoWorldMap")
 
 **Question 2. Do you see any odd observations, like marine species on land or vice versa? If so, please see the Data Cleaning and explain what you did to fix or remove these points.**
 
-I do not see any odd observations such as a terrestrial black-footed ferret point documented in aquatic habitat. However, taking a look at the `geometry` column in for the `obs` dataframe, I noticed that there are duplicate points as well as points with very few decimal points for the latitude and/or longitude, meaning that these points are not accurate enough to reliably provide insight into the type of habitat that the black-footed ferret prefers. Therefore, I will filter the geometry column for duplicates and points that have fewer than 3 decimal places of precision.
+I do not see any odd observations such as terrestrial black-footed ferret points documented in aquatic habitat. However, taking a look at the `geometry` column in for the `obs` dataframe, I noticed that there are duplicate points as well as points with very few decimal points for the latitude and/or longitude, meaning that these points are not accurate enough to reliably provide insight into the type of habitat that the black-footed ferret prefers. Therefore, I will remove observations (based on the geometry column) that are duplicates of the same individual, and remove observations that have fewer than 3 decimal places of precision in the geometry column. I chose to remove observations that only have 2 or 1 decimal places of precision in either the latitude or longitude values because 3 decimal places is accurate to ~110 meters at the equator, but 2 decimal degrees is only accurate to only ~1,100 meters at the equator. Therefore, 3 decimal places is much more likely to yield accurate correlations between where the individual was recorded and the altitude, temperature, and other environmental variables of interest at that location ([source](https://gis.stackexchange.com/questions/8650/measuring-accuracy-of-latitude-and-longitude)). This leaves 149 observations in my dataframe.
 
 ```{r}
 # find duplicate coordinates, this function creates a vector of T or F for each of the 202 points
@@ -94,7 +112,7 @@ sum(duplicates)
 obs_check_dup <- obs %>% 
   mutate(dups = duplicates)
 
-# seems like the duplicates function gives TRUE for all rows that match other rows, not just the second copy of the row, so we need to keep 1 copy and remove only the second copy!
+# seems like the duplicates function gives TRUE for all rows that match other rows, not just the second copy of the row, so we need to keep 1 copy and remove only the second copy by setting .keep_all = T
 obs_no_dup_check <- obs_check_dup %>% 
   distinct(geometry, .keep_all = TRUE)
 
@@ -105,6 +123,8 @@ obs_clean <- obs_no_dup_check[-c(108, 124, 133, 137, 144, 146, 148), ] %>%
 
 
 ### Section 2.4 Get Environmental Data
+
+Use the Species Distribution Model predictors R package `sdmpredictors` to get underlying environmental data for your observations. First you’ll get underlying environmental data for predicting the niche on the species observations. Then you’ll generate pseudo-absence points with which to sample the environment. The model will differentiate the environment of the presence points from the pseudo-absence points.
 
 #### 2.4.1 Presence
 
@@ -148,7 +168,7 @@ env_stack <- load_layers(env_layers_vec)
 # mapview(env_stack, hide = T) # makes the html too big for Github
 plot(env_stack, nc=2)
 ```
-Crop the environmental rasters to a reasonable study area around the black-footed ferret observations.
+Notice how the extent is currently global for the layers. Crop the environmental rasters to a reasonable study area around the black-footed ferret observations.
 
 ```{r}
 obs_hull_geo  <- file.path(dir_data, "obs_hull.geojson")
@@ -264,8 +284,14 @@ presence_absence_sample <- pts_env %>%
 
 presence_absence_sample
 ```
+In the end this table is the data that feeds into our species distribution model (y ~ X), where:
+
+- y is the present column with values of 1 (present) or 0 (absent)
+- X is all other columns
 
 ### 2.5 Term Plots
+
+In the vein of exploratory data analyses, before going into modeling let’s look at the data. Specifically, let’s look at how obviously differentiated is the presence versus absence for each predictor – a more pronounced presence peak should make for a more confident model. A plot for a specific predictor and response is called a “term plot”. In this case we’ll look for predictors where the presence (present = 1) occupies a distinct “niche” from the background absence points (present = 0).
 
 ```{r}
 pts_env %>% 

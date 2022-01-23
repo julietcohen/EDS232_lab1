@@ -11,7 +11,22 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Lab 1b. Species Distribution Modeling - Logistic Regression
 
+### Learning Objectives
+
+#### Exploratory Data Analysis (cont’d):
+
+- Pairs plot to show correlation between variables and avoid multicollinearity (see 8.2 Many predictors in a model)
+
+#### Logistic Regression seen as an evolution of techniques
+
+- Linear Model to show simplest multivariate regression, but predictions can be outside the binary values.
+- Generalized Linear Model uses a logit transformation to constrain the outputs to being within two values.
+- Generalized Additive Model allows for “wiggle” in predictor terms.
+- Maxent (Maximum Entropy) is a presence-only modeling technique that allows for a more complex set of shapes between predictor and response.
+
 ### Explore (continued)
+
+Let’s load R packages and data from previous Explore session last time for your species.
 
 ```{r}
 librarian::shelf(
@@ -26,9 +41,15 @@ pts_env_csv <- file.path(dir_data, "pts_env.csv")
 
 pts_env <- read_csv(pts_env_csv)
 nrow(pts_env)
+# number of points is 298, half real obs and half pseudo obs
 ```
 
-Let’s look at a pairs plot (using GGally::ggpairs()) to show correlations between variables.
+```{r}
+datatable(pts_env, rownames = F)
+```
+
+
+Let’s look at a pairs plot (using `GGally::ggpairs()`) to show correlations between variables.
 
 ```{r}
 GGally::ggpairs(
@@ -38,6 +59,10 @@ GGally::ggpairs(
 
 
 ## Section 2: Logistic Regression
+
+We’ll work up to the modeling workflow using multiple regression methods along the way.
+
+![](model_workflow.png)
 
 ### 2.1: Setup Data
 
@@ -57,6 +82,8 @@ nrow(d)
 ### 2.2: Linear Model
 
 Let’s start as simply as possible with a linear model lm() on multiple predictors X to predict presence y using a simpler workflow.
+
+![](lm_workflow.png)
 
 ```{r}
 # fit a linear model
