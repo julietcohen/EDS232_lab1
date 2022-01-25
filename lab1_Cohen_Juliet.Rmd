@@ -87,9 +87,10 @@ obs <- sf::read_sf(obs_geo)
 nrow(obs) # number of rows
 ```
 
+
 **Question 1. How many observations total are in GBIF for your species?**
 
-There are 202 observations for the black-footed ferret because there are 202 rows. This may be slightly over-exaggerating the number of observations if there are duplicate observations or the observations are null for a different reason, such as incorrect coordinates or imprecise coordinates.
+There are 202 observations for the black-footed ferret after querying for observations that have coordinates. The total number of black-footed ferret observations is 803, but this was reduced to 202 from the query. 202 may be slightly over-exaggerating the number of observations if there are duplicate observations or the observations are null for a different reason, such as incorrect coordinates or inadequately precise coordinates.
 
 ### Map the initial species observations
 
@@ -98,7 +99,8 @@ There are 202 observations for the black-footed ferret because there are 202 row
 mapview::mapview(obs, map.types = "Esri.NatGeoWorldMap")
 ```
 
-**Question 2. Do you see any odd observations, like marine species on land or vice versa? If so, please see the Data Cleaning and explain what you did to fix or remove these points.**
+
+**Question 2. Do you see any odd observations, like marine species on land or vice versa? If so, please see the Data Cleaning and explain what data cleaning steps you took to fix or remove these points.**
 
 I do not see any odd observations such as terrestrial black-footed ferret points documented in aquatic habitat. However, taking a look at the `geometry` column in for the `obs` dataframe, I noticed that there are duplicate points as well as points with very few decimal points for the latitude and/or longitude, meaning that these points are not accurate enough to reliably provide insight into the type of habitat that the black-footed ferret prefers. Therefore, I will remove observations (based on the geometry column) that are duplicates of the same individual, and remove observations that have fewer than 3 decimal places of precision in the geometry column. I chose to remove observations that only have 2 or 1 decimal places of precision in either the latitude or longitude values because 3 decimal places is accurate to ~110 meters at the equator, but 2 decimal degrees is only accurate to only ~1,100 meters at the equator. Therefore, 3 decimal places is much more likely to yield accurate correlations between where the individual was recorded and the altitude, temperature, and other environmental variables of interest at that location ([source](https://gis.stackexchange.com/questions/8650/measuring-accuracy-of-latitude-and-longitude)). This leaves 149 observations in my dataframe.
 
@@ -153,13 +155,17 @@ env_layers <- sdmpredictors::list_layers(env_datasets_vec)
 DT::datatable(env_layers)
 ```
 
+**Question 3: What environmental layers did you choose as predictors? Can you find any support for these in the literature?**
+
+I chose 5 layers based on the available literature about black-footed ferrets biology and habitat preferences:
+- I choose to include the altitude layer `WC_alt` because the literature on this species says that block-footed ferret lives in grasslands, which are typically low elevation, so this probably is a strong predictor for their habitat preference.
+- I chose to inlcude the layer for annual mean temperature, `WC_bio1` because most animal species have a preferred temperature range, so I believe this is a predictor that should be included for an endangered species such as the black-footed ferret as well as most other animal species. This will advise where new populations should be established in order to have the best chance at success going forward with climcate change that will likely bring heat waves and droughts.
+- I chose to not include the layer for diurnal temperature because the literature says this species is nocturnal, so they are likely not as sensitive to diurnal temperature.
+- I chose to include the temperature seasonality layer `WC_bio4` because this species might prefer stable temperatures year-round, or perhaps has adapted to seasonal change in temperature because this species does not hibernate, but is rather much less active in the winter. This layer will be important to pay attention to as the world moves forward with climate change.
+- I chose to include the annual precipitation layer `WC_bio12` because many mammals rely on rainfall to survive. Rainfall supports plant life and serves as a water source.
+- I chose to include they layer for the minimum temperature in the coldest month, `ER_minTempWarmest`, because these mammals likely will survive best in habitat that allows them to dedicate their energy to hunting, fighting off disease, and socializing rather than keeping warm. Two of the main causes of the black-footed ferret's decline are disease and habitat loss.
+
 ```{r}
-# choose layers after some inspection and perhaps consulting literature
-# I choose to keep the altitude layer because the block-footed ferret only lives in grasslands
-# I chose to remove the diurnal temperature layer because black-footed ferrets are nocturnal
-# I chose to add the temperature seasonality layer because this layer will be important to pay attention to considering climate change
-# I chose to add the annual precipitation layer because many mammals rely on rainfall to survive
-# I chose to add the layer for the min temp in the coldest month because these mammals likely will survive best in habitat that allows them to dedicate their energy to hunting, fighting off disease, and socializing rather than keeping warm (as they are endotherms)
 env_layers_vec <- c("WC_alt", "WC_bio1", "WC_bio4", "WC_bio12", "ER_minTempWarmest")
 
 # get layers
@@ -458,6 +464,10 @@ summary(mdl)
 plot(mdl, scale=0)
 ```
 
+**Question 4: Which GAM environmental variables, and even range of values, seem to contribute most towards presence (above 0 response) versus absence (below 0 response)?**
+
+The GAM environmental variables that seem to contribute most towards presence versus absence are longitude and annual mean temperature, `WC_bio1`. I can see by the ticks along the x-axis that these variables have realtively equal tick marks throughout the x-axis.
+
 ## 2.5 Maxent (Maximum Entropy)
 
 Maxent is probably the most commonly used species distribution model (Elith 2011) since it performs well with few input data points, only requires presence points (and samples background for comparison) and is easy to use with a Java graphical user interface (GUI).
@@ -609,9 +619,9 @@ mdl
 
 ```{r}
 # plot tree 
-# par() is a grpahics fucntion, used to query graphical parameters
-# mar arg is a numericla vector that takes a vector of 4 elements (bottom, left, top, right) thjat gives the lines of margin on all sides of the plot
-# Changing the 1's to other numbers and fractions doesnt change the output tho, maybe it only changes when knitted?
+# par() is a graphics function, used to query graphical parameters
+# mar arg is a numerical vector that takes a vector of 4 elements (bottom, left, top, right) that gives the lines of margin on all sides of the plot
+# Changing the 1's to other numbers and fractions doesn't change the output tho, maybe it only changes when knitted?
 par(mar = c(1, 1, 1, 1)) 
 rpart.plot(mdl)
 ```
@@ -635,6 +645,10 @@ mdl$cptable
 # Cross-Validation is a technique used to assess how well our Machine learning models perform on unseen data. It's the process of assessing how the results of a statistical analysis will generalize to an independent data set
 ```
 
+**Question 5: Based on the complexity plot threshold, what size of tree is recommended?**
+
+Based on the complexity plot threshold, a tree of size 3 is recommended. This is the leftmost value for which the mean lies below the dotted line.
+
 ### 2.3 Feature Interpretation
 
 ```{r}
@@ -654,13 +668,17 @@ ggplot(mdl_caret)
 ```{r}
 # vip = variable importance scores for the predictors in a model
 # altitude has greatest impact
-# bio12 = annual mean precipitation has secnd most impact
+# bio12 = annual mean precipitation has second most impact
 # being an endangered species with so little range partially due to the small population size, the lon and lat have a large impact
 # ER_minTempWarmest = Minimum temperature coldest month, has some impact but not much, seems the ferrets can deal with some cold temps
 # ferrets dont hibernate, but in winter, the amount of time they are active and the distances they travel decrease substantially (source: https://nationalzoo.si.edu/animals/black-footed-ferret#:~:text=In%20burrows%2C%20they%20sleep%2C%20catch,distances%20they%20travel%20decrease%20substantially.)
-# turns our that bio, annual mean temperature, has essentially no impact on ferret's habitat selection
+# turns our that WC_bio1, annual mean temperature, has essentially no impact on ferret's habitat selection
 vip(mdl_caret, num_features = 40, bar = FALSE)
 ```
+
+**Question 6: what are the top 3 most important variables of your model?**
+
+The top 3 most important variables in my model are altitude (`WC_alt`), annual precipitation (`WC_bio12`), and longitude (in that order).
 
 ```{r}
 # Construct partial dependence plots
@@ -707,6 +725,9 @@ p2 <- vip::vip(mdl_permutation, bar = FALSE)
 gridExtra::grid.arrange(p1, p2, nrow = 1)
 ```
 
+**Question 7: How might variable importance differ between rpart and RandomForest in your model outputs?**
+
+My most important variable importance does not differ between `rpart` and `RandomForest`, as both outputs show that altitude is the most important variable. Similarly, both `rpart` and `RandomForest` show that longitude is within the top 3 most important variables, but the output of `RandomForest` shows that longitude is more important than annual precipitation (`WC_bio12`). The output of `rpart` showed that annual precipitation was more important than longitude. Lastly, `RandomForest` with the `importance` argument set to `permutation` shows that latitiude is the third most important variable. Based on my reading online, `permutation` is more reliable for `RandomForest` approaches than `impurity.`
 
 ## Lab 1d. Species Distribution Modeling - Evaluate Models
 
@@ -809,6 +830,10 @@ mdl_maxv <- read_rds(mdl_maxv_rds)
 # plot variable contributions per predictor
 plot(mdl_maxv)
 ```
+
+**Question 8: Which variables were removed due to multicollinearity and what is the rank of most to least important remaining variables in your model?**
+
+The variables removed due to multicollinearity were annual mean temperature (`WC_bio1`) and altitude (`WC_alt`). The rank of most to least important remaining variables in the model are 1. annual precipitation (`WC_bio12`), 2. temperature seasonality (`WC_bio4`), and 3. minimum temperature in the coldest month (`ER_minTempWarmest`).
 
 ```{r}
 # plot term plots
