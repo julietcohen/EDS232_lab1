@@ -1,5 +1,5 @@
 ---
-title: "lab1_Cohen_Juliet"
+title: "EDS232: Machine Learning in Environmental Data Science - Lab 1"
 author: "Juliet Cohen"
 date: "1/25/2022"
 output: html_document
@@ -10,7 +10,7 @@ knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 
 ```
 
-## Lab 1a. Species Distribution Modeling - Exploratory Data Analysis
+## Lab 1a. Species Distribution Modeling of the Black-Footed Ferret - Exploratory Data Analysis
 
 ### Learning Objectives
 
@@ -157,12 +157,12 @@ DT::datatable(env_layers)
 
 **Question 3: What environmental layers did you choose as predictors? Can you find any support for these in the literature?**
 
-I chose 5 environmental layers based on the available literature about black-footed ferrets biology and habitat preferences:
-- I choose to include the altitude layer `WC_alt` because the literature on this species says that block-footed ferret lives in grasslands, which are typically low elevation, so this probably is a strong predictor for their habitat preference.
-- I chose to include the layer for annual mean temperature `WC_bio1` because most animal species have a preferred temperature range, so I believe this is a predictor that should be included for an endangered species such as the black-footed ferret as well as most other animal species. This will advise where new populations should be established in order to have the best chance at success going forward with climate change, which will likely bring heat waves and droughts in black-footed ferret habitat.
-- I chose to **not** include the layer for mean diurnal temperature `WC_bio2` because the literature says this species is nocturnal, so they are likely not as sensitive to diurnal temperature.
-- I chose to include the temperature seasonality layer `WC_bio4` because this species might prefer stable temperatures year-round, or perhaps has adapted to seasonal change in temperature because this species does not hibernate, but is much less active in the winter. This layer will be important to pay attention to as the world moves forward with climate change. 
-- I chose to include the annual precipitation layer `WC_bio12` because many mammals rely on rainfall to survive. Rainfall supports plant life and serves as a water source.
+I chose 5 environmental layers based on the available literature about black-footed ferrets biology and habitat preferences:\
+- I choose to include the altitude layer `WC_alt` because the literature on this species says that block-footed ferret lives in grasslands, which are typically low elevation, so this probably is a strong predictor for their habitat preference.\
+- I chose to include the layer for annual mean temperature `WC_bio1` because most animal species have a preferred temperature range, so I believe this is a predictor that should be included for an endangered species such as the black-footed ferret as well as most other animal species. This will advise where new populations should be established in order to have the best chance at success going forward with climate change, which will likely bring heat waves and droughts in black-footed ferret habitat.\
+- I chose to **not** include the layer for mean diurnal temperature `WC_bio2` because the literature says this species is nocturnal, so they are likely not as sensitive to diurnal temperature.\
+- I chose to include the temperature seasonality layer `WC_bio4` because this species might prefer stable temperatures year-round, or perhaps has adapted to seasonal change in temperature because this species does not hibernate, but is much less active in the winter. This layer will be important to pay attention to as the world moves forward with climate change. \
+- I chose to include the annual precipitation layer `WC_bio12` because many mammals rely on rainfall to survive. Rainfall supports plant life and serves as a water source.\
 - I chose to include the layer for the minimum temperature in the coldest month `ER_minTempWarmest` because these mammals likely will survive best in habitat that allows them to dedicate their energy to hunting, fighting off disease, and socializing rather than keeping warm. Two of the main causes of the black-footed ferret's decline are disease and habitat loss.
 
 ```{r}
@@ -506,7 +506,9 @@ if (!file.exists(mdl_maxent_rds)){
   readr::write_rds(mdl, mdl_maxent_rds)
 }
 mdl <- read_rds(mdl_maxent_rds)
-
+mdl
+```
+```{r}
 # plot variable contributions per predictor
 plot(mdl)
 ```
@@ -518,9 +520,9 @@ response(mdl)
 
 **Question 5: Which Maxent environmental variables, and even range of values, seem to contribute most towards presence (closer to 1 response) and how might this differ from the GAM results?**
 
-- The Maxent environmental variables that contribute most to presence are annual precipitation layer `WC_bio12` and the minimum temperature in the coldest month `ER_minTempWarmest`. Annual precipitation contributes to presence between the values of approximately (0 - 900) mm. The minimum temperature in the coldest month contributes the most to presence between the values of approximately (125 - 250) standard deviations of the annual mean temperature in degrees Celsius.
-- Based on the guided interpretation from [this online resource](https://biodiversityinformatics.amnh.org/open_source/maxent/Maxent_tutorial2017.pdf), I determined that altitude was not as strong of an environmental predictor based on the plot curve shown here.
-- I determined that annual mean temperature (`WC_bio1`) and temperature seasonality layer (`WC_bio4`) likely do not contribute the most towards presence because both plot shapes seem to be skewed by a small amount of data on the lower end of the x-axis.
+- The Maxent environmental variables that contribute most to presence are annual precipitation layer `WC_bio12` and the minimum temperature in the coldest month `ER_minTempWarmest`. Annual precipitation contributes to presence between the values of approximately (0 - 900) mm. The minimum temperature in the coldest month contributes the most to presence between the values of approximately (125 - 250) standard deviations of the annual mean temperature in degrees Celsius.\
+- Based on the guided interpretation from [this online resource](https://biodiversityinformatics.amnh.org/open_source/maxent/Maxent_tutorial2017.pdf), I determined that altitude was not as strong of an environmental predictor based on the plot curve shown here.\
+- I determined that annual mean temperature (`WC_bio1`) and temperature seasonality layer (`WC_bio4`) likely do not contribute the most towards presence because both plot shapes seem to be skewed by a small amount of data on the lower end of the x-axis.\
 - This largely differs from my GAM results, which pointed to longitude, temperature seasonality (`WC_bio4`), and annual mean temperature (`WC_bio1`) as the environmental variables that contribute most to presence or absence. Perhaps my interpretation of the plots differed, because in the GAM plots I see a more detailed, spread-out representation of the data points, while the plots here show fewer ticks and seem to be more skewed.
 
 ```{r}
@@ -609,6 +611,11 @@ d_train  <- rsample::training(d_split)
 # show number of rows present is 0 vs 1
 table(d$present)
 ```
+
+```{r}
+table(d_train$present)
+```
+
 
 ## Decision Trees
 
@@ -916,7 +923,7 @@ points(fpr, tpr, pch=23, bg="blue")
 plot(y_maxv > thr)
 ```
 
-
+Lab complete! We can save the black-footed ferret from extinction!
 
 
 
